@@ -14,7 +14,7 @@ from bs4 import BeautifulSoup
 LOGGER = logging.getLogger(__name__)
 
 
-def parse_select_tag(html, sort_by):
+def parse_select_tag(html, class_attr="router_sort_ixp"):
     """
     Parse data in the following format
 
@@ -31,19 +31,12 @@ def parse_select_tag(html, sort_by):
     </select>
 
     html: The html text to parse in order to get the data.
-    sort_by: Sort the IPX routers by IPX, city or country.
+    class_attr: The class attribute of the select tag to get. Defaul value is "router_sort_ipx".
     """
 
     routers = []
 
     soup = BeautifulSoup(html, "html.parser")
-
-    if sort_by == "ipx":
-        class_attr = "router_sort_ixp"
-    elif sort_by == "city":
-        class_attr = "router_sort_city"
-    elif sort_by == "country":
-        class_attr = "router_sort_country"
 
     option_tags = soup.find("select", class_=class_attr).find_all("option")
     if option_tags is None:
@@ -67,23 +60,17 @@ def parse_select_tag(html, sort_by):
     return routers
 
 
-def get_ipx_rooters(url="https://www.pch.net/tools/looking_glass", sort_by="ipx"):
+def get_ipx_rooters(url="https://www.pch.net/tools/looking_glass"):
     """
     Get the IPX routers
 
     url: The URL to get the IPX routers. Default value is https://www.pch.net/tools/looking_glass
-    sort_by: Sort the IPX routers by IPX, city or country. Default value is ipx.
     """
-    LOGGER.info("url: %s sort_by: %s", url, sort_by)
-
-    sort_by_options = ["ipx", "city", "country"]
-    if sort_by not in sort_by_options:
-        LOGGER.error("Option %s is not valid for sorting routers.")
-        return None
+    LOGGER.info("url: %s", url)
 
     looking_glass_html = get_html_text(url)
 
-    routers = parse_select_tag(looking_glass_html, sort_by)
+    routers = parse_select_tag(looking_glass_html)
 
     LOGGER.info(routers)
 
@@ -150,18 +137,8 @@ def main():
 
     setup_logging("info")
 
-    ipx_routers = get_ipx_rooters(sort_by="ipx")
+    ipx_routers = get_ipx_rooters()
     save_data_to_json_file(ipx_routers, "./", "ipx_routers.json")
-
-    time.sleep(random.randrange(60, 120))
-
-    city_routers = get_ipx_rooters(sort_by="city")
-    save_data_to_json_file(city_routers, "./", "city_routers.json")
-
-    time.sleep(random.randrange(60, 120))
-
-    country_routers = get_ipx_rooters(sort_by="country")
-    save_data_to_json_file(country_routers, "./", "country_routers.json")
 
 
 if __name__ == "__main__":
