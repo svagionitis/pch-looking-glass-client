@@ -66,9 +66,9 @@ def get_ipx_rooters(url="https://www.pch.net/tools/looking_glass"):
 
     url: The URL to get the IPX routers. Default value is https://www.pch.net/tools/looking_glass
     """
-    LOGGER.info("url: %s", url)
+    LOGGER.debug("url: %s", url)
 
-    looking_glass_html = get_html_text(url)
+    looking_glass_html = get_request_text(url)
 
     routers = parse_select_tag(looking_glass_html)
 
@@ -77,19 +77,113 @@ def get_ipx_rooters(url="https://www.pch.net/tools/looking_glass"):
     return routers
 
 
-def get_html_text(url, user_agent="pch_looking_glass_cli.py"):
+def generate_nonce(length=100):
     """
-    Get the HTML text of a URL
+    Generate pseudorandom number.
 
-    url: The URL to get the HTML text
+    See https://github.com/joestump/python-oauth2/blob/master/oauth2/__init__.py#L171
+    """
+
+    return "".join([str(random.SystemRandom().randint(0, 9)) for i in range(length)])
+
+
+def get_ipx_router_query(
+    query, args, router_id, url="https://www.pch.net/tools/looking_glass_query"
+):
+    """
+    Get IPX router information using a query in the Looking Glass utility
+
+    query: The query to ask. The available values are "summary", "v6_summary", "prefix", "v6_prefix" and "regex".
+    args: The arguments for the query. "summary" and "v6_summary" do not need arguments.
+    router_id: The router ID.
+    url: The url to send the query. Default value is https://www.pch.net/tools/looking_glass_query
+    """
+    LOGGER.info("query: %s args: %s router_id: %s url: %s", query, args, router_id, url)
+
+    query_options = ["summary", "v6_summary", "prefix", "v6_prefix", "regex"]
+    if query not in query_options:
+        LOGGER.error("Query %s is not valid.", query)
+        return None
+
+    nonce_generated_cookie = generate_nonce()
+    nonce_generated_query = generate_nonce()
+
+    query_params = {
+        "query": query,
+        "args": args,
+        "router": router_id,
+        "pch_nonce": nonce_generated_query,
+    }
+
+    pch_cookie = "pch_nonce{0}={1}; pch_nonce{2}={3}".format(
+        nonce_generated_cookie,
+        nonce_generated_cookie,
+        nonce_generated_query,
+        nonce_generated_query,
+    )
+
+    looking_glass_query_json = get_request_text(
+        url, params=query_params, cookie=pch_cookie
+    )
+
+    LOGGER.info(looking_glass_query_json)
+
+    resp = json.loads(looking_glass_query_json)[0]
+
+    if resp["status"] != "good":
+        LOGGER.error("Response status: %s", resp["status"])
+        return None
+
+    router_result = resp["result"]
+
+    if router_result == "NA":
+        LOGGER.warn("Router not available")
+        router_result = ""
+
+    LOGGER.info(router_result)
+
+    return router_result
+
+
+def get_ipx_router_query_summary(router_id, ip_version="ipv4"):
+    """
+    Get the IPv4 or IPv6 summary of an IPX router
+
+    router_id: The router ID.
+    ip_version: The IP version to get the summary of. Default value is "ipv4".
+    """
+    ip_version_options = ["ipv4", "ipv6"]
+    if ip_version not in ip_version_options:
+        LOGGER.error("IP version %s not valid")
+        return None
+
+    if ip_version == "ipv4":
+        return get_ipx_router_query("summary", "", router_id)
+    elif ip_version == "ipv6":
+        return get_ipx_router_query("v6_summary", "", router_id)
+
+
+def get_request_text(
+    url, params=None, cookie=None, user_agent="pch_looking_glass_cli.py"
+):
+    """
+    Make a GET request to a URL
+
+    url: The URL to make the GET request
+    params: The parameters to pass in the URL. Default value is None.
+    cookie: The Cookie header to use. Default value is none.
     user_agent: The User Agent header to use. Default value is "pch_looking_glass_cli.py"
     """
-    LOGGER.info(url)
+    LOGGER.info(
+        "url: %s params: %s cookie: %s user_agent: %s", url, params, cookie, user_agent
+    )
 
     headers = {"User-Agent": user_agent}
+    if cookie:
+        headers["Cookie"] = cookie
 
     try:
-        get_url = requests.get(url, headers=headers)
+        get_url = requests.get(url, headers=headers, params=params)
 
         LOGGER.debug(get_url)
 
@@ -139,6 +233,8 @@ def main():
 
     ipx_routers = get_ipx_rooters()
     save_data_to_json_file(ipx_routers, "./", "ipx_routers.json")
+
+    get_ipx_router_query_summary(159)
 
 
 if __name__ == "__main__":
