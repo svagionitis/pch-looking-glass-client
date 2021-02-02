@@ -31,7 +31,7 @@ def parse_select_tag(html, class_attr="router_sort_ixp"):
     </select>
 
     html: The html text to parse in order to get the data.
-    class_attr: The class attribute of the select tag to get. Defaul value is "router_sort_ipx".
+    class_attr: The class attribute of the select tag to get. Defaul value is "router_sort_ixp".
     """
 
     routers = []
@@ -60,11 +60,11 @@ def parse_select_tag(html, class_attr="router_sort_ixp"):
     return routers
 
 
-def get_ipx_rooters(url="https://www.pch.net/tools/looking_glass"):
+def get_ixp_rooters(url="https://www.pch.net/tools/looking_glass"):
     """
-    Get the IPX routers
+    Get the IXP routers
 
-    url: The URL to get the IPX routers. Default value is https://www.pch.net/tools/looking_glass
+    url: The URL to get the IXP routers. Default value is https://www.pch.net/tools/looking_glass
     """
     LOGGER.debug("url: %s", url)
 
@@ -87,11 +87,11 @@ def generate_nonce(length=100):
     return "".join([str(random.SystemRandom().randint(0, 9)) for i in range(length)])
 
 
-def get_ipx_router_query(
+def get_ixp_router_query(
     query, args, router_id, url="https://www.pch.net/tools/looking_glass_query"
 ):
     """
-    Get IPX router information using a query in the Looking Glass utility
+    Get IXP router information using a query in the Looking Glass utility
 
     query: The query to ask. The available values are "summary", "v6_summary", "prefix", "v6_prefix" and "regex".
     args: The arguments for the query. "summary" and "v6_summary" do not need arguments.
@@ -145,22 +145,67 @@ def get_ipx_router_query(
     return router_result
 
 
-def get_ipx_router_query_summary(router_id, ip_version="ipv4"):
+def get_ixp_router_query_summary(router_id, ip_version="ipv4"):
     """
-    Get the IPv4 or IPv6 summary of an IPX router
+    Get the IPv4 or IPv6 summary of an IXP router
 
     router_id: The router ID.
     ip_version: The IP version to get the summary of. Default value is "ipv4".
     """
+    LOGGER.debug("router_id: %s ip_version: %s", router_id, ip_version)
+
     ip_version_options = ["ipv4", "ipv6"]
     if ip_version not in ip_version_options:
         LOGGER.error("IP version %s not valid")
         return None
 
     if ip_version == "ipv4":
-        return get_ipx_router_query("summary", "", router_id)
+        return get_ixp_router_query("summary", "", router_id)
     elif ip_version == "ipv6":
-        return get_ipx_router_query("v6_summary", "", router_id)
+        return get_ixp_router_query("v6_summary", "", router_id)
+
+
+def get_router_summary(ixp, city, country, ip_version):
+    """
+    Get the summary for a specific router with IXP, city and country
+
+    ixp: The IXP of the router
+    city: The city located.
+    country: The country located.
+    ip_version: The IP version of the summary. Available values are "ipv4" or "ipv6"
+    """
+    LOGGER.debug(
+        "ixp: %s city: %s country: %s ip_version: %s", ixp, city, country, ip_version
+    )
+
+    # Step 1: Get all the IXP routers which comes as id, ixp, city, country
+    routers = get_ixp_rooters()
+
+    # Step 2: Search the list of routers if the specific ixp, city, country router exists
+    router_found = next(
+        (
+            router
+            for router in routers
+            if router["ixp"] == ixp
+            and router["city"] == city
+            and router["country"] == country
+        ),
+        None,
+    )
+    if router_found is None:
+        LOGGER.error(
+            "No router with ixp: %s city: %s and country: %s found.", ixp, city, country
+        )
+        return None
+
+    LOGGER.info(router_found)
+
+    # Step 3: If the specific router exists, use the id to make a query for the summary
+    router_summary = get_ixp_router_query_summary(router_found["id"], ip_version)
+
+    LOGGER.info(router_summary)
+
+    return router_summary
 
 
 def get_request_text(
@@ -231,10 +276,7 @@ def main():
 
     setup_logging("info")
 
-    ipx_routers = get_ipx_rooters()
-    save_data_to_json_file(ipx_routers, "./", "ipx_routers.json")
-
-    get_ipx_router_query_summary(159)
+    get_router_summary("A-IX", "Beirut", "Lebanon", "ipv4")
 
 
 if __name__ == "__main__":
