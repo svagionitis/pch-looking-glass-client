@@ -6,8 +6,10 @@ import logging
 import json
 import os
 import re
+import sys
 from utils import setup_logging, save_data_to_json_file, generate_nonce
 from web_utils import get_request_text, parse_select_tag
+from config_arg import parse_input_args
 
 LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +47,7 @@ def get_ixp_rooters(
         routers = parse_select_tag(looking_glass_html)
         save_data_to_json_file(routers, cached_dir, cached_filename)
 
-    LOGGER.info(routers)
+    LOGGER.debug(routers)
 
     return routers
 
@@ -140,7 +142,7 @@ def get_ixp_router_query(
         LOGGER.info("Router not available")
         router_result = ""
 
-    LOGGER.info(router_result)
+    LOGGER.debug(router_result)
 
     return router_result
 
@@ -169,14 +171,14 @@ def get_ixp_router_query_summary(router_id, ip_version="ipv4"):
 
 def get_router_summary(ixp, city, country, ip_version):
     """
-    Get the summary for a specific router with IXP, city and country
+    Get the summary for a specific router with IXP, city, country and IP version
 
     ixp: The IXP of the router
     city: The city located.
     country: The country located.
     ip_version: The IP version of the summary. Available values are "ipv4" or "ipv6"
     """
-    LOGGER.debug(
+    LOGGER.info(
         "ixp: %s city: %s country: %s ip_version: %s", ixp, city, country, ip_version
     )
 
@@ -222,6 +224,7 @@ def parse_router_summary(summary):
 
     summary: The router summary to parse in order to get specific information
     """
+    LOGGER.debug("summary: %s", summary)
 
     router_summary = {}
 
@@ -229,20 +232,54 @@ def parse_router_summary(summary):
     # and strip the start and end of the string
     clean_up_summary = re.sub(r"(\s)(?=\1)", "", summary.strip())
 
-    # TODO Maybe it's better to use regex rather than split in lines
-    # because what if the information re-arrange to different lines
-    # Split summary in lines
-    lines = clean_up_summary.split("\n")
-    LOGGER.info(lines)
+    router_summary["ixp_local_asn"] = int(
+        re.search(r"local AS number (\d+)", clean_up_summary).group(1)
+    )
+    router_summary["ixp_rib_entries"] = int(
+        re.search(r"RIB entries (\d+)", clean_up_summary).group(1)
+    )
+    router_summary["ixp_number_of_peers"] = int(
+        re.search(r"Peers (\d+)", clean_up_summary).group(1)
+    )
+    router_summary["ixp_number_of_neighbors"] = int(
+        re.search(r"Total number of neighbors (\d+)", clean_up_summary).group(1)
+    )
 
-    router_summary["rs_local_asn"] = lines[0].split(",")[1].strip().split(" ")[3]
-    router_summary["rs_rib_entries"] = lines[1].split(",")[0].strip().split(" ")[2]
-    router_summary["rs_number_of_peers"] = lines[2].split(",")[0].strip().split(" ")[1]
-    router_summary["rs_number_of_neighbors"] = lines[-1].split(" ")[4]
-
-    LOGGER.info(router_summary)
+    LOGGER.debug(router_summary)
 
     return router_summary
+
+
+def get_specific_information_for_router(ixp, city, country, ip_version):
+    """
+    Get specific information for the specific router
+
+    The specific information to retrieve are
+    * Route Server local ASN
+    * Number of RIB entries
+    * Number of Peers
+    * Total number of neighbors
+
+    ixp: The IXP of the router
+    city: The city located.
+    country: The country located.
+    ip_version: The IP version of the summary. Available values are "ipv4" or "ipv6"
+    """
+    router_info = {}
+
+    router_info["ixp"] = ixp
+    router_info["ixp_city"] = city
+    router_info["ixp_country"] = country
+    router_info["ixp_ip_version"] = ip_version
+
+    summary = get_router_summary(ixp, city, country, ip_version)
+
+    summary_info = parse_router_summary(summary)
+    router_info.update(summary_info)
+
+    LOGGER.debug(router_info)
+
+    return router_info
 
 
 def main():
@@ -250,12 +287,19 @@ def main():
     Main function
     """
 
-    setup_logging("info")
+    config = parse_input_args(sys.argv[1:])
+    LOGGER.info(config)
 
-    # get_router_summary("A-IX", "Beirut", "Lebanon", "ipv4")
+    if not config.log_level:
+        setup_logging("info")
+    else:
+        setup_logging(config.log_level)
 
-    summary = "BGP router identifier 66.102.33.68, local AS number 3856\nRIB entries 1025, using 64 KiB of memory\nPeers 7, using 17 KiB of memory\nPeer groups 8, using 128 bytes of memory\n\nNeighbor        V    AS MsgRcvd MsgSent   TblVer  InQ OutQ Up\/Down  State\/PfxRcd\n66.102.33.65    4    42   67146   63439        0    0    0 06w1d22h      514\n185.1.108.45    4 44870   72394   63567        0    0    0 06w2d00h      513\n192.168.51.6    4 65101       0       0        0    0    0 never    Idle (Admin)\n206.220.231.55  4  3856   59665   66317        0    0    0 3d02h19m        0\n\nTotal number of neighbors 4\n"
-    parse_router_summary(summary)
+    result = get_specific_information_for_router(
+        config.ixp, config.ixp_city, config.ixp_country, config.ixp_ip_version
+    )
+
+    print(result)
 
 
 if __name__ == "__main__":
