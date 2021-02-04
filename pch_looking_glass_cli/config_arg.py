@@ -41,21 +41,21 @@ def parse_input_args(script_args, config_file="pch_looking_glass_cli_config.conf
     conf.add(
         "--ixp",
         env_var="IXP",
-        required=True,
+        required=False,
         type=str,
         help="IXP",
     )
     conf.add(
         "--ixp-city",
         env_var="IXP_CITY",
-        required=True,
+        required=False,
         type=str,
         help="The city of the IXP",
     )
     conf.add(
         "--ixp-country",
         env_var="IXP_COUNTRY",
-        required=True,
+        required=False,
         type=str,
         help="The country of the IXP",
     )

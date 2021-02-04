@@ -7,6 +7,8 @@ import json
 import os
 import re
 import sys
+import time
+import random
 from utils import setup_logging, save_data_to_json_file
 from web_utils import get_request_text, parse_select_tag
 from config_arg import parse_input_args
@@ -90,6 +92,8 @@ def get_router_summary(ixp, city, country, ip_version):
 
     # Step 3: If the specific router exists, use the id to make a query for the summary
     router_summary = get_ixp_router_query_summary(router_found["id"], ip_version)
+    if not router_summary:
+        return None
 
     LOGGER.debug(router_summary)
 
@@ -109,6 +113,8 @@ def parse_router_summary(summary):
     summary: The router summary to parse in order to get specific information
     """
     LOGGER.debug("summary: %s", summary)
+    if summary is None:
+        return None
 
     router_summary = {}
 
@@ -159,11 +165,53 @@ def get_specific_information_for_router(ixp, city, country, ip_version):
     summary = get_router_summary(ixp, city, country, ip_version)
 
     summary_info = parse_router_summary(summary)
-    router_info.update(summary_info)
+    if summary_info is not None:
+        router_info.update(summary_info)
 
     LOGGER.debug(router_info)
 
     return router_info
+
+
+def get_specific_information_for_all_routers(ip_version):
+    """
+    Get specific information for all available routers
+
+    The specific information to retrieve are
+    * Route Server local ASN
+    * Number of RIB entries
+    * Number of Peers
+    * Total number of neighbors
+
+    ip_version: The IP version of the summary. Available values are "ipv4" or "ipv6"
+    """
+    LOGGER.info("ip_version: %s", ip_version)
+
+    # Step 1: Get all the IXP routers which comes as id, ixp, city, country
+    routers = get_ixp_rooters()
+
+    # Iterate to all routers in list
+    for router in routers:
+        router_info = get_specific_information_for_router(
+            router["ixp"], router["city"], router["country"], ip_version
+        )
+        LOGGER.info(router_info)
+
+        # TODO This will send to a DB
+        router_info_filename = (
+            router["ixp"]
+            + "_"
+            + router["city"]
+            + "_"
+            + router["country"]
+            + "_"
+            + ip_version
+            + ".json"
+        )
+        save_data_to_json_file(router_info, "IPX", router_info_filename)
+
+        # Sleep between requests
+        time.sleep(random.randrange(100, 120))
 
 
 def main():
@@ -179,11 +227,14 @@ def main():
     else:
         setup_logging(config.log_level)
 
-    result = get_specific_information_for_router(
-        config.ixp, config.ixp_city, config.ixp_country, config.ixp_ip_version
-    )
+    if config.ixp and config.ixp_city and config.ixp_country:
+        result = get_specific_information_for_router(
+            config.ixp, config.ixp_city, config.ixp_country, config.ixp_ip_version
+        )
 
-    print(result)
+        print(result)
+    else:
+        get_specific_information_for_all_routers(config.ixp_ip_version)
 
 
 if __name__ == "__main__":

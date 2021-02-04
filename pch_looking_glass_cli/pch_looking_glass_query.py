@@ -97,7 +97,10 @@ def get_ixp_router_query(
     router_result = resp["result"]
 
     if router_result == "NA":
-        LOGGER.info("Router not available")
+        LOGGER.warning("Router not available")
+        router_result = ""
+    elif router_result.find("route-collector.mnl.pch.net is unreachable") != -1:
+        LOGGER.warning("route-collector.mnl.pch.net is unreachable.")
         router_result = ""
 
     LOGGER.debug(router_result)
