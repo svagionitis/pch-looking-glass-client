@@ -5,6 +5,7 @@ A PCH looking glass tool (https://www.pch.net/tools/looking_glass/) client
 import logging
 import json
 import os
+import re
 from utils import setup_logging, save_data_to_json_file, generate_nonce
 from web_utils import get_request_text, parse_select_tag
 
@@ -209,6 +210,41 @@ def get_router_summary(ixp, city, country, ip_version):
     return router_summary
 
 
+def parse_router_summary(summary):
+    """
+    Get specific information from the router summary
+
+    The specific information to retrieve are
+    * Route Server local ASN
+    * Number of RIB entries
+    * Number of Peers
+    * Total number of neighbors
+
+    summary: The router summary to parse in order to get specific information
+    """
+
+    router_summary = {}
+
+    # Clean up the summary, replace multiple occurences of white spaces
+    # and strip the start and end of the string
+    clean_up_summary = re.sub(r"(\s)(?=\1)", "", summary.strip())
+
+    # TODO Maybe it's better to use regex rather than split in lines
+    # because what if the information re-arrange to different lines
+    # Split summary in lines
+    lines = clean_up_summary.split("\n")
+    LOGGER.info(lines)
+
+    router_summary["rs_local_asn"] = lines[0].split(",")[1].strip().split(" ")[3]
+    router_summary["rs_rib_entries"] = lines[1].split(",")[0].strip().split(" ")[2]
+    router_summary["rs_number_of_peers"] = lines[2].split(",")[0].strip().split(" ")[1]
+    router_summary["rs_number_of_neighbors"] = lines[-1].split(" ")[4]
+
+    LOGGER.info(router_summary)
+
+    return router_summary
+
+
 def main():
     """
     Main function
@@ -216,7 +252,10 @@ def main():
 
     setup_logging("info")
 
-    get_router_summary("A-IX", "Beirut", "Lebanon", "ipv4")
+    # get_router_summary("A-IX", "Beirut", "Lebanon", "ipv4")
+
+    summary = "BGP router identifier 66.102.33.68, local AS number 3856\nRIB entries 1025, using 64 KiB of memory\nPeers 7, using 17 KiB of memory\nPeer groups 8, using 128 bytes of memory\n\nNeighbor        V    AS MsgRcvd MsgSent   TblVer  InQ OutQ Up\/Down  State\/PfxRcd\n66.102.33.65    4    42   67146   63439        0    0    0 06w1d22h      514\n185.1.108.45    4 44870   72394   63567        0    0    0 06w2d00h      513\n192.168.51.6    4 65101       0       0        0    0    0 never    Idle (Admin)\n206.220.231.55  4  3856   59665   66317        0    0    0 3d02h19m        0\n\nTotal number of neighbors 4\n"
+    parse_router_summary(summary)
 
 
 if __name__ == "__main__":
