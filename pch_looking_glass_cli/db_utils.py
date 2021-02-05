@@ -6,6 +6,7 @@ import logging
 import sqlite3
 import os
 from sqlite3 import Error
+from datetime import datetime
 
 LOGGER = logging.getLogger(__name__)
 
@@ -45,11 +46,13 @@ def save_data_to_sqlite_db(
             ixp_rib_entries INT, \
             ixp_number_of_peers INT, \
             ixp_number_of_neighbors INT, \
+            date_added TEXT, \
             PRIMARY KEY (ixp, ixp_city, ixp_country) \
         )".format(
         table_name
     )
-    insert_into_sql = "INSERT INTO {0} VALUES (?, ?, ?, ?, ?, ?, ?, ?)".format(
+    # See https://www.sqlite.org/lang_replace.html
+    replace_into_sql = "REPLACE INTO {0} VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)".format(
         table_name
     )
 
@@ -62,7 +65,7 @@ def save_data_to_sqlite_db(
 
             if data:
                 curs.execute(
-                    insert_into_sql,
+                    replace_into_sql,
                     [
                         data["ixp"],
                         data["ixp_city"],
@@ -72,6 +75,7 @@ def save_data_to_sqlite_db(
                         data["ixp_rib_entries"],
                         data["ixp_number_of_peers"],
                         data["ixp_number_of_neighbors"],
+                        datetime.utcnow().isoformat(),
                     ],
                 )
 
