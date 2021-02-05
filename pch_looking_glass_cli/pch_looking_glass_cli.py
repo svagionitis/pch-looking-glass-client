@@ -113,27 +113,32 @@ def parse_router_summary(summary):
     summary: The router summary to parse in order to get specific information
     """
     LOGGER.debug("summary: %s", summary)
-    if summary is None:
-        return None
 
     router_summary = {}
 
-    # Clean up the summary, replace multiple occurences of white spaces
-    # and strip the start and end of the string
-    clean_up_summary = re.sub(r"(\s)(?=\1)", "", summary.strip())
+    if summary is None:
+        router_summary["ixp_local_asn"] = router_summary[
+            "ixp_rib_entries"
+        ] = router_summary["ixp_number_of_peers"] = router_summary[
+            "ixp_number_of_neighbors"
+        ] = -1
+    else:
+        # Clean up the summary, replace multiple occurences of white spaces
+        # and strip the start and end of the string
+        clean_up_summary = re.sub(r"(\s)(?=\1)", "", summary.strip())
 
-    router_summary["ixp_local_asn"] = int(
-        re.search(r"local AS number (\d+)", clean_up_summary).group(1)
-    )
-    router_summary["ixp_rib_entries"] = int(
-        re.search(r"RIB entries (\d+)", clean_up_summary).group(1)
-    )
-    router_summary["ixp_number_of_peers"] = int(
-        re.search(r"Peers (\d+)", clean_up_summary).group(1)
-    )
-    router_summary["ixp_number_of_neighbors"] = int(
-        re.search(r"Total number of neighbors (\d+)", clean_up_summary).group(1)
-    )
+        router_summary["ixp_local_asn"] = int(
+            re.search(r"local AS number (\d+)", clean_up_summary).group(1)
+        )
+        router_summary["ixp_rib_entries"] = int(
+            re.search(r"RIB entries (\d+)", clean_up_summary).group(1)
+        )
+        router_summary["ixp_number_of_peers"] = int(
+            re.search(r"Peers (\d+)", clean_up_summary).group(1)
+        )
+        router_summary["ixp_number_of_neighbors"] = int(
+            re.search(r"Total number of neighbors (\d+)", clean_up_summary).group(1)
+        )
 
     LOGGER.debug(router_summary)
 
