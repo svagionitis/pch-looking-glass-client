@@ -13,6 +13,7 @@ from utils import setup_logging, save_data_to_json_file
 from web_utils import get_request_text, parse_select_tag
 from config_arg import parse_input_args
 from pch_looking_glass_query import get_ixp_router_query_summary
+from db_utils import save_data_to_sqlite_db
 
 LOGGER = logging.getLogger(__name__)
 
@@ -213,7 +214,8 @@ def get_specific_information_for_all_routers(ip_version):
             + ip_version
             + ".json"
         )
-        save_data_to_json_file(router_info, "IPX", router_info_filename)
+        save_data_to_json_file(router_info, "IXP-JSON", router_info_filename)
+        save_data_to_sqlite_db(router_info, "IXP-SQLITE")
 
         # Sleep between requests
         time.sleep(random.randrange(100, 120))
