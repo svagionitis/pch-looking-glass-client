@@ -218,7 +218,7 @@ def get_specific_information_for_all_routers(ip_version):
         save_data_to_sqlite_db(router_info, "IXP-SQLITE")
 
         # Sleep between requests
-        time.sleep(random.randrange(100, 120))
+        time.sleep(random.randrange(10, 20))
 
 
 def main():
