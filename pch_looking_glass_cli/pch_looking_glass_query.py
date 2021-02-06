@@ -96,11 +96,10 @@ def get_ixp_router_query(
 
     router_result = resp["result"]
 
-    if router_result == "NA":
-        LOGGER.warning("Router not available")
-        router_result = ""
-    elif router_result.find("is unreachable") != -1:
-        LOGGER.warning("%s", router_result.strip().split(". ")[0])
+    # The correct result should contain the string "BGP router identifier"
+    # If it does not contain it, then there is some kind of error
+    if router_result.find("BGP router identifier") == -1:
+        LOGGER.warning("Response result: %s", router_result.strip())
         router_result = ""
 
     LOGGER.debug(router_result)
