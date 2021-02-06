@@ -88,8 +88,26 @@ def save_data_to_sqlite_db(
                 curs.close()
 
 
-def save_data_to_postgresql_db(data, host, port, user, password, db_name, table_name):
-    """"""
+def save_data_to_postgresql_db(
+    data,
+    host="127.0.0.1",
+    port=5432,
+    user="ixp",
+    password="PchL00k1ngGl@ss",
+    db_name="ixp",
+    table_name="ixp_info",
+):
+    """
+    Save data to an Sqlite DB
+
+    data: The data to save.
+    host: The host of the DB. Default value is "127.0.0.1"
+    port: The port of the DB. Default value is 5432.
+    user: The user to log in to a specific DB with db_name. Default value is "ixp".
+    password: The password of the user to log in to a specific DB with db_name. Default value is "PchL00k1ngGl@ss".
+    db_name: The name of the DB. The default value is "ixp".
+    table_name: The table in DB to save the data. The default value is "ixp_info".
+    """
 
     # Create the table if it does not exist
     create_table_sql = "\
@@ -107,8 +125,16 @@ def save_data_to_postgresql_db(data, host, port, user, password, db_name, table_
         )".format(
         table_name
     )
-    # See https://www.sqlite.org/lang_replace.html
-    replace_into_sql = "REPLACE INTO {0} VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)".format(
+    # See https://www.postgresql.org/docs/9.5/sql-insert.html
+    insert_into_sql = "INSERT INTO {0} (ixp, ixp_city, ixp_country, ixp_ip_version, ixp_local_asn, ixp_rib_entries, ixp_number_of_peers, ixp_number_of_neighbors, date_added) \
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) \
+                       ON CONFLICT (ixp, ixp_city, ixp_country) \
+                       DO UPDATE SET ixp_ip_version = EXCLUDED.ixp_ip_version, \
+                                     ixp_local_asn = EXCLUDED.ixp_local_asn, \
+                                     ixp_rib_entries = EXCLUDED.ixp_rib_entries, \
+                                     ixp_number_of_peers = EXCLUDED.ixp_number_of_peers, \
+                                     ixp_number_of_neighbors = EXCLUDED.ixp_number_of_neighbors, \
+                                     date_added = EXCLUDED.date_added".format(
         table_name
     )
 
@@ -121,7 +147,7 @@ def save_data_to_postgresql_db(data, host, port, user, password, db_name, table_
 
                 if data:
                     curs.execute(
-                        replace_into_sql,
+                        insert_into_sql,
                         [
                             data["ixp"],
                             data["ixp_city"],
