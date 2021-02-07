@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<link rel="icon" type="image/x-icon" href="https://www.pch.net/assets/img/pch-logo-32x32.png" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0, user-scalable=no">
+	<title>PCH Looking Glass - a small IXP database</title>
+	<link rel="stylesheet" type="text/css" href="media/css/jquery.dataTables.css">
+	<link rel="stylesheet" type="text/css" href="resources/syntax/shCore.css">
+	<link rel="stylesheet" type="text/css" href="resources/demo.css">
+
+	<style type="text/css" class="init">
+
+		tfoot input {
+			width: 100%;
+			padding: 3px;
+			box-sizing: border-box;
+		}
+
+	</style>
+
+	<script type="text/javascript" language="javascript" src="media/js/jquery.js"></script>
+	<script type="text/javascript" language="javascript" src="media/js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" language="javascript" src="media/js/ellipsis.js"></script>
+	<script type="text/javascript" language="javascript" src="media/js/moment.min.js"></script>
+	<script type="text/javascript" language="javascript" src="media/js/datetime.js"></script>
+	<script type="text/javascript" language="javascript" src="resources/syntax/shCore.js"></script>
+	<script type="text/javascript" language="javascript" src="resources/demo.js"></script>
+
+	<script type="text/javascript" language="javascript" class="init">
+
+
+		$(document).ready(function() {
+			// Setup - add a text input to each footer cell
+			$('#ixp tfoot th').each( function () {
+				var title = $(this).text();
+				$(this).html( '<input type="text" placeholder="Search '+title+'" />' );
+			} );
+
+			// DataTable
+			var table = $('#ixp').DataTable({
+				"processing": true,
+				serverSide: true,
+				ajax: 'http://localhost/ixp',
+				columns: [
+					{ "data": "ixp" },
+					{ "data": "ixp_city" },
+					{ "data": "ixp_country" },
+					{ "data": "ixp_ip_version" },
+					{ "data": "ixp_local_asn" },
+					{ "data": "ixp_rib_entries" },
+					{ "data": "ixp_number_of_peers" },
+					{ "data": "ixp_number_of_neighbors" },
+					{ "data": "date_added" }
+				],
+				columnDefs: [
+					/**
+					 * Convert the date values from YYYY-MM-DD to ddd DD MMM YYYY, eg Tue 30 Jan 2018
+					 */
+					{
+						"targets": [8],
+						/* https://github.com/DataTables/Plugins/blob/master/dataRender/datetime.js */
+						"render": $.fn.dataTable.render.moment('YYYY-MM-DD', 'ddd DD MMM YYYY')
+					},
+				],
+				initComplete: function () {
+					// Apply the search
+					this.api().columns().every( function () {
+						var that = this;
+
+						$( 'input', this.footer() ).on( 'keyup change clear', function () {
+							if ( that.search() !== this.value ) {
+								that
+									.search( this.value )
+									.draw();
+							}
+						} );
+					} );
+				}
+			});
+		} );
+
+	</script>
+
+</head>
+<body class="dt-ixp">
+	<div class="container">
+		<section>
+			<h1>PCH Looking Glass <span>A small IXP database</span></h1>
+			<div class="demo-html"></div>
+			<table id="ixp" class="display" style="width:100%">
+				<thead>
+					<tr>
+						<th>ixp</th>
+						<th>ixp_city</th>
+						<th>ixp_country</th>
+						<th>ixp_ip_version</th>
+						<th>ixp_local_asn</th>
+						<th>ixp_rib_entries</th>
+						<th>ixp_number_of_peers</th>
+						<th>ixp_number_of_neighbors</th>
+						<th>date_added</th>
+					</tr>
+				</thead>
+				<tfoot>
+					<tr>
+						<th>ixp</th>
+						<th>ixp_city</th>
+						<th>ixp_country</th>
+						<th>ixp_ip_version</th>
+						<th>ixp_local_asn</th>
+						<th>ixp_rib_entries</th>
+						<th>ixp_number_of_peers</th>
+						<th>ixp_number_of_neighbors</th>
+						<th>date_added</th>
+					</tr>
+				</tfoot>
+			</table>
+		</section>
+	</div>
+</body>
+</html>
