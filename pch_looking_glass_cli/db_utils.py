@@ -38,6 +38,7 @@ def save_data_to_sqlite_db(
     data_db_filename = os.path.join(db_dir, db_filename)
 
     # Create the table if it does not exist
+    # See https://sqlite.org/lang_createtable.html
     create_table_sql = "\
         CREATE TABLE IF NOT EXISTS {0} ( \
             ixp TEXT NOT NULL, \
@@ -54,7 +55,8 @@ def save_data_to_sqlite_db(
         table_name
     )
     # See https://www.sqlite.org/lang_replace.html
-    replace_into_sql = "REPLACE INTO {0} VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)".format(
+    replace_into_sql = "REPLACE INTO {0} \
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)".format(
         table_name
     )
 
@@ -110,6 +112,7 @@ def save_data_to_postgresql_db(
     """
 
     # Create the table if it does not exist
+    # See https://www.postgresql.org/docs/current/sql-createtable.html
     create_table_sql = "\
         CREATE TABLE IF NOT EXISTS {0} ( \
             ixp TEXT NOT NULL, \
@@ -125,8 +128,8 @@ def save_data_to_postgresql_db(
         )".format(
         table_name
     )
-    # See https://www.postgresql.org/docs/9.5/sql-insert.html
-    insert_into_sql = "INSERT INTO {0} (ixp, ixp_city, ixp_country, ixp_ip_version, ixp_local_asn, ixp_rib_entries, ixp_number_of_peers, ixp_number_of_neighbors, date_added) \
+    # See https://www.postgresql.org/docs/current/sql-insert.html
+    insert_into_sql = "INSERT INTO {0} \
                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) \
                        ON CONFLICT (ixp, ixp_city, ixp_country) \
                        DO UPDATE SET ixp_ip_version = EXCLUDED.ixp_ip_version, \
