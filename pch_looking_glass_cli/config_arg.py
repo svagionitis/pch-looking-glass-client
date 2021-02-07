@@ -62,7 +62,7 @@ def parse_input_args(script_args, config_file="pch_looking_glass_cli_config.conf
     conf.add(
         "--ixp-ip-version",
         env_var="IXP_IP_VERSION",
-        required=True,
+        required=False,
         choices=["ipv4", "ipv6"],
         help="The IPv summary of the IXP",
     )

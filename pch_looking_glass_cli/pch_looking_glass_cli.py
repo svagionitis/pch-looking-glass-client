@@ -179,7 +179,7 @@ def get_specific_information_for_router(ixp, city, country, ip_version):
     return router_info
 
 
-def get_specific_information_for_all_routers(ip_version):
+def get_specific_information_for_all_routers():
     """
     Get specific information for all available routers
 
@@ -188,38 +188,38 @@ def get_specific_information_for_all_routers(ip_version):
     * Number of RIB entries
     * Number of Peers
     * Total number of neighbors
-
-    ip_version: The IP version of the summary. Available values are "ipv4" or "ipv6"
     """
-    LOGGER.info("ip_version: %s", ip_version)
+    ip_versions = ["ipv4", "ipv6"]
 
     # Step 1: Get all the IXP routers which comes as id, ixp, city, country
     routers = get_ixp_rooters()
 
     # Iterate to all routers in list
     for router in routers:
-        router_info = get_specific_information_for_router(
-            router["ixp"], router["city"], router["country"], ip_version
-        )
-        LOGGER.info(router_info)
+        # and to each IP version
+        for ip_ver in ip_versions:
+            router_info = get_specific_information_for_router(
+                router["ixp"], router["city"], router["country"], ip_ver
+            )
+            LOGGER.info(router_info)
 
-        # TODO This will send to a DB
-        router_info_filename = (
-            router["ixp"]
-            + "_"
-            + router["city"]
-            + "_"
-            + router["country"]
-            + "_"
-            + ip_version
-            + ".json"
-        )
-        save_data_to_json_file(router_info, "IXP-JSON", router_info_filename)
-        save_data_to_sqlite_db(router_info, "IXP-SQLITE")
-        save_data_to_postgresql_db(router_info)
+            # TODO This will send to a DB
+            router_info_filename = (
+                router["ixp"]
+                + "_"
+                + router["city"]
+                + "_"
+                + router["country"]
+                + "_"
+                + ip_ver
+                + ".json"
+            )
+            save_data_to_json_file(router_info, "IXP-JSON", router_info_filename)
+            save_data_to_sqlite_db(router_info, "IXP-SQLITE")
+            save_data_to_postgresql_db(router_info)
 
-        # Sleep between requests
-        time.sleep(random.randrange(10, 20))
+            # Sleep between requests
+            time.sleep(random.randrange(5, 15))
 
 
 def main():
@@ -235,14 +235,14 @@ def main():
     else:
         setup_logging(config.log_level)
 
-    if config.ixp and config.ixp_city and config.ixp_country:
+    if config.ixp and config.ixp_city and config.ixp_country and config.ixp_ip_version:
         result = get_specific_information_for_router(
             config.ixp, config.ixp_city, config.ixp_country, config.ixp_ip_version
         )
 
         print(result)
     else:
-        get_specific_information_for_all_routers(config.ixp_ip_version)
+        get_specific_information_for_all_routers()
 
 
 if __name__ == "__main__":

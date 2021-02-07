@@ -50,7 +50,7 @@ def save_data_to_sqlite_db(
             ixp_number_of_peers INT, \
             ixp_number_of_neighbors INT, \
             date_added TEXT, \
-            PRIMARY KEY (ixp, ixp_city, ixp_country) \
+            PRIMARY KEY (ixp, ixp_city, ixp_country, ixp_ip_version) \
         )".format(
         table_name
     )
@@ -124,16 +124,15 @@ def save_data_to_postgresql_db(
             ixp_number_of_peers INT, \
             ixp_number_of_neighbors INT, \
             date_added TEXT, \
-            PRIMARY KEY (ixp, ixp_city, ixp_country) \
+            PRIMARY KEY (ixp, ixp_city, ixp_country, ixp_ip_version) \
         )".format(
         table_name
     )
     # See https://www.postgresql.org/docs/current/sql-insert.html
     insert_into_sql = "INSERT INTO {0} \
                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) \
-                       ON CONFLICT (ixp, ixp_city, ixp_country) \
-                       DO UPDATE SET ixp_ip_version = EXCLUDED.ixp_ip_version, \
-                                     ixp_local_asn = EXCLUDED.ixp_local_asn, \
+                       ON CONFLICT (ixp, ixp_city, ixp_country, ixp_ip_version) \
+                       DO UPDATE SET ixp_local_asn = EXCLUDED.ixp_local_asn, \
                                      ixp_rib_entries = EXCLUDED.ixp_rib_entries, \
                                      ixp_number_of_peers = EXCLUDED.ixp_number_of_peers, \
                                      ixp_number_of_neighbors = EXCLUDED.ixp_number_of_neighbors, \
