@@ -17,4 +17,12 @@ class Query(graphene.ObjectType):
         return query.all()
 
 
-schema = graphene.Schema(query=Query)
+class Subscription(graphene.ObjectType):
+    ixps = graphene.List(Ixp)
+
+    def resolve_ixps(parent, info):
+        query = Ixp.get_query(info)
+        return query.all()
+
+
+schema = graphene.Schema(query=Query, subscription=Subscription)
