@@ -10,15 +10,11 @@ class Ixp(SQLAlchemyObjectType):
 
 
 class Query(graphene.ObjectType):
-
-    node = graphene.relay.Node.Field()
     ixps = graphene.List(Ixp)
 
-    @staticmethod
-    def resolve_ixps(parent, info, **args):
-        ixps_query = Ixp.get_query(info)
-
-        return ixps_query.all()
+    def resolve_ixps(parent, info):
+        query = Ixp.get_query(info)
+        return query.all()
 
 
-schema = graphene.Schema(query=Query, types=[Ixp])
+schema = graphene.Schema(query=Query)
