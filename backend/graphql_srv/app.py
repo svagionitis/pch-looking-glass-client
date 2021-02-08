@@ -9,19 +9,15 @@ app.debug = True
 example_query = """
 {
   ixps {
-    edges {
-      node {
-        ixp
-        ixpCity
-        ixpCountry
-        ixpIpVersion
-        ixpLocalAsn
-        ixpRibEntries
-        ixpNumberOfPeers
-        ixpNumberOfNeighbors
-        dateAdded
-      }
-    }
+    ixp
+    ixpCity
+    ixpCountry
+    ixpIpVersion
+    ixpLocalAsn
+    ixpRibEntries
+    ixpNumberOfPeers
+    ixpNumberOfNeighbors
+    dateAdded
   }
 }
 """

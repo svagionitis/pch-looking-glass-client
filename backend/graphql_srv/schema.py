@@ -12,7 +12,13 @@ class Ixp(SQLAlchemyObjectType):
 class Query(graphene.ObjectType):
 
     node = graphene.relay.Node.Field()
-    ixps = SQLAlchemyConnectionField(Ixp.connection)
+    ixps = graphene.List(Ixp)
+
+    @staticmethod
+    def resolve_ixps(parent, info, **args):
+        ixps_query = Ixp.get_query(info)
+
+        return ixps_query.all()
 
 
-schema = graphene.Schema(query=Query)
+schema = graphene.Schema(query=Query, types=[Ixp])
