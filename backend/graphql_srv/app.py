@@ -1,9 +1,11 @@
 from flask import Flask
+from flask_cors import CORS
 from database import db_session
 from flask_graphql import GraphQLView
 from schema import schema
 
 app = Flask(__name__)
+CORS(app)
 app.debug = True
 
 example_query = """
