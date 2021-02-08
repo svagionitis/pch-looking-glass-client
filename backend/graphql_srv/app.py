@@ -27,9 +27,9 @@ example_query = """
 """
 
 app.add_url_rule(
-    "/ixp",
+    "/graphql",
     view_func=GraphQLView.as_view(
-        "ixp", schema=schema, graphiql=True, context={"session": db_session}
+        "graphql", schema=schema, graphiql=True, context={"session": db_session}
     ),
 )
 
