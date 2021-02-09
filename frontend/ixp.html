@@ -70,7 +70,14 @@
                     } );
                 }
             });
+
+            // TODO This is just polling. Need to use graphql subscriptions
+            setInterval( function () {
+                table.ajax.reload();
+            }, 60000 );
+
         } );
+
 
     </script>
 
