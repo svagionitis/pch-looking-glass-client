@@ -1,0 +1,6 @@
+cache-dir = @CACHE_DIR@
+db-host = @DB_HOST@
+db-port = @DB_PORT@
+db-user = @DB_USER@
+db-pass = @DB_PASS@
+db-name = @DB_NAME@

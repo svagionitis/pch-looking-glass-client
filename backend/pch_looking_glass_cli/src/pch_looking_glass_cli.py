@@ -13,7 +13,7 @@ from utils import setup_logging, save_data_to_json_file
 from web_utils import get_request_text, parse_select_tag
 from config_arg import parse_input_args
 from pch_looking_glass_query import get_ixp_router_query_summary
-from db_utils import save_data_to_sqlite_db, save_data_to_postgresql_db
+from db_utils import save_data_to_postgresql_db
 
 LOGGER = logging.getLogger(__name__)
 
@@ -179,7 +179,9 @@ def get_specific_information_for_router(ixp, city, country, ip_version):
     return router_info
 
 
-def get_specific_information_for_all_routers():
+def get_specific_information_for_all_routers(
+    cache_dir, db_host, db_port, db_user, db_pass, db_name
+):
     """
     Get specific information for all available routers
 
@@ -188,11 +190,18 @@ def get_specific_information_for_all_routers():
     * Number of RIB entries
     * Number of Peers
     * Total number of neighbors
+
+    cache_dir: The directory to store any cache info, here for the number of routers
+    db_host: The host of the DB.
+    db_port: The port of the DB.
+    db_user: The user to log in to a specific DB with db_name.
+    db_password: The password of the user to log in to a specific DB with db_name.
+    db_name: The name of the DB.
     """
     ip_versions = ["ipv4", "ipv6"]
 
     # Step 1: Get all the IXP routers which comes as id, ixp, city, country
-    routers = get_ixp_rooters()
+    routers = get_ixp_rooters(cached_dir=cache_dir)
 
     # Iterate to all routers in list
     for router in routers:
@@ -203,20 +212,9 @@ def get_specific_information_for_all_routers():
             )
             LOGGER.info(router_info)
 
-            # TODO This will send to a DB
-            router_info_filename = (
-                router["ixp"]
-                + "_"
-                + router["city"]
-                + "_"
-                + router["country"]
-                + "_"
-                + ip_ver
-                + ".json"
+            save_data_to_postgresql_db(
+                router_info, db_host, db_port, db_user, db_pass, db_name
             )
-            save_data_to_json_file(router_info, "IXP-JSON", router_info_filename)
-            save_data_to_sqlite_db(router_info, "IXP-SQLITE")
-            save_data_to_postgresql_db(router_info)
 
             # Sleep between requests
             time.sleep(random.randrange(5, 15))
@@ -242,7 +240,14 @@ def main():
 
         print(result)
     else:
-        get_specific_information_for_all_routers()
+        get_specific_information_for_all_routers(
+            config.cache_dir,
+            config.db_host,
+            config.db_port,
+            config.db_user,
+            config.db_pass,
+            config.db_name,
+        )
 
 
 if __name__ == "__main__":

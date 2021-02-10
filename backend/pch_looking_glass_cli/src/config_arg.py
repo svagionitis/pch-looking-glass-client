@@ -66,5 +66,47 @@ def parse_input_args(script_args, config_file="pch_looking_glass_cli_config.conf
         choices=["ipv4", "ipv6"],
         help="The IPv summary of the IXP",
     )
+    conf.add(
+        "--cache-dir",
+        env_var="CACHE_DIR",
+        required=False,
+        type=str,
+        help="The cache directory to store any cached info",
+    )
+    conf.add(
+        "--db-host",
+        env_var="DB_HOST",
+        required=True,
+        type=str,
+        help="The host of the DB",
+    )
+    conf.add(
+        "--db-port",
+        env_var="DB_PORT",
+        required=True,
+        type=int,
+        help="The port of the DB",
+    )
+    conf.add(
+        "--db-user",
+        env_var="DB_USER",
+        required=True,
+        type=str,
+        help="The username to connect to the DB",
+    )
+    conf.add(
+        "--db-pass",
+        env_var="DB_PASS",
+        required=True,
+        type=str,
+        help="The password of the user to connect to the DB",
+    )
+    conf.add(
+        "--db-name",
+        env_var="DB_NAME",
+        required=True,
+        type=str,
+        help="The name of the DB to connect",
+    )
 
     return conf.parse_args(script_args)
