@@ -203,21 +203,25 @@ def get_specific_information_for_all_routers(
     # Step 1: Get all the IXP routers which comes as id, ixp, city, country
     routers = get_ixp_rooters(cached_dir=cache_dir)
 
-    # Iterate to all routers in list
-    for router in routers:
-        # and to each IP version
-        for ip_ver in ip_versions:
-            router_info = get_specific_information_for_router(
-                router["ixp"], router["city"], router["country"], ip_ver
-            )
-            LOGGER.info(router_info)
+    while True:
+        # Iterate to all routers in list
+        for router in routers:
+            # and to each IP version
+            for ip_ver in ip_versions:
+                router_info = get_specific_information_for_router(
+                    router["ixp"], router["city"], router["country"], ip_ver
+                )
+                LOGGER.info(router_info)
 
-            save_data_to_postgresql_db(
-                router_info, db_host, db_port, db_user, db_pass, db_name
-            )
+                save_data_to_postgresql_db(
+                    router_info, db_host, db_port, db_user, db_pass, db_name
+                )
 
-            # Sleep between requests
-            time.sleep(random.randrange(5, 15))
+                # Sleep between requests
+                time.sleep(random.randrange(5, 15))
+
+        # Sleep for 5 minutes
+        time.sleep(300)
 
 
 def main():
