@@ -41,7 +41,7 @@
                 "processing": true,
                 serverSide: false,
                 ajax: {
-                    url: 'http://localhost:5000/graphql?query={ixps{ixp ixpCity ixpCountry ixpIpVersion ixpLocalAsn ixpRibEntries ixpNumberOfPeers ixpNumberOfNeighbors dateAdded}}',
+                    url: 'http://@BACKEND_HOST@:@BACKEND_PORT@/graphql?query={ixps{ixp ixpCity ixpCountry ixpIpVersion ixpLocalAsn ixpRibEntries ixpNumberOfPeers ixpNumberOfNeighbors dateAdded}}',
                     dataSrc: 'data.ixps'
                 },
                 columns: [
