@@ -1,0 +1,40 @@
+version: "3.7"
+services:
+    db:
+        image: postgres
+        volumes:
+            - ./backend/db/ixp_postgres.sql:/docker-entrypoint-initdb.d/ixp_postgres.sql
+            - db-data:/var/lib/postgresql/data
+        ports:
+            - 5432:5432
+        environment:
+            - POSTGRES_PASSWORD=adminpass
+
+    backend_pch_looking_glass_cli:
+        build: backend/pch_looking_glass_cli
+        restart: unless-stopped
+        depends_on:
+            - db
+        environment:
+            - CACHE_DIR=/tmp
+            - DB_HOST=db
+            - DB_PORT=5432
+            - DB_USER=ixp
+            - DB_PASS=PchL00k1ngGl@ss
+            - DB_NAME=ixp
+
+    backend_graphql_srv:
+        build: backend/graphql_srv
+        restart: unless-stopped
+        depends_on:
+            - db
+            - backend_pch_looking_glass_cli
+        environment:
+            - DB_HOST=db
+            - DB_PORT=5432
+            - DB_USER=ixp
+            - DB_PASS=PchL00k1ngGl@ss
+            - DB_NAME=ixp
+
+volumes:
+    db-data:
