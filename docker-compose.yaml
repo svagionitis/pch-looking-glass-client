@@ -35,6 +35,21 @@ services:
             - DB_USER=ixp
             - DB_PASS=PchL00k1ngGl@ss
             - DB_NAME=ixp
+        ports:
+            - 5000:5000
+
+    frontend:
+        build:
+            context: frontend
+            args:
+                BACKEND_HOST: backend_graphql_srv
+                BACKEND_PORT: 5000
+        restart: unless-stopped
+        depends_on:
+            - db
+            - backend_graphql_srv
+        ports:
+            - 5555:80
 
 volumes:
     db-data:
