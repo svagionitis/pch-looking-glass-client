@@ -1,0 +1,15 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+beautifulsoup4 = "==4.8.2"
+ConfigArgParse = "==1.2.3"
+psycopg2 = "==2.8.4"
+requests = "==2.22.0"
+
+[dev-packages]
+
+[requires]
+python_version = "3.8"
